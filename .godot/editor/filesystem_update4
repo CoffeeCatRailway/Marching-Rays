@@ -1,0 +1,3 @@
+res://shaders/marching_rays.gdshader
+res://marching_rays_mat.tres
+res://shaders/first_ray_march.gdshader

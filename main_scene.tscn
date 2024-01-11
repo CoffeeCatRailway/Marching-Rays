@@ -1,0 +1,29 @@
+[gd_scene load_steps=6 format=3 uid="uid://4b7nk1fvjtxc"]
+
+[ext_resource type="Material" uid="uid://chodf53o2hry" path="res://marching_rays_mat.tres" id="1_p4s5e"]
+[ext_resource type="Script" path="res://MarchingRays.gd" id="2_15bqu"]
+[ext_resource type="Script" path="res://CameraController.gd" id="3_lwl8i"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_8gwvp"]
+material = ExtResource("1_p4s5e")
+flip_faces = true
+size = Vector3(10, 10, 10)
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_qtseh"]
+frequency = 0.1918
+fractal_type = 0
+
+[node name="Node3D" type="Node3D"]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_8gwvp")
+script = ExtResource("2_15bqu")
+size = 10
+material = ExtResource("1_p4s5e")
+noise = SubResource("FastNoiseLite_qtseh")
+
+[node name="CamHolder" type="Node3D" parent="."]
+script = ExtResource("3_lwl8i")
+
+[node name="Camera3D" type="Camera3D" parent="CamHolder"]
+transform = Transform3D(1, 0, 0, 0, 0.900357, 0.435153, 0, -0.435153, 0.900357, 0, 5, 7.5)
