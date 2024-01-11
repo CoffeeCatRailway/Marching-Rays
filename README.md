@@ -1,7 +1,7 @@
 # Marching-Rays
 A side project spired from Sebastion Lague's 'Ray Marching & Marching Cubes' videos
 
-**Small Disciption**
+**Small Disciption**<br/>
 As it is now, it caps out around 40~ fps with the `cubesIn` size in `marching_rays.gdshader` being greater then 250. This is manily due to the shader looping over all "instances" in one frame.
 
 I plan on trying to use compute shaders like in Sebastion's Ray Marching project so that smaller groups can be done in parallel
