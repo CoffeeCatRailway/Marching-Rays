@@ -32,9 +32,13 @@ func _run() -> void:
 	material.set_shader_parameter("unitBox", unitBox)
 	material.set_shader_parameter("cubesIn", cubes)
 	mesh.material = material
-	print("Passed cubes array of size ", size**3)
+	print("Passed cubes array of size ", cubes.size())
 
 func _process(delta) -> void:
+	var sizeVec := Vector3.ONE * size / 2.
+	var pos := position + -(Vector3.ONE * (size / 2.) / 2.) - unitBox
+	DebugDraw3D.draw_box(pos, Quaternion.IDENTITY, sizeVec)
+	
 	DebugDraw2D.set_text("Frames", Engine.get_frames_drawn())
 	DebugDraw2D.set_text("FPS", Engine.get_frames_per_second())
 	DebugDraw2D.set_text("Delta", delta)
