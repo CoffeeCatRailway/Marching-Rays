@@ -7,6 +7,7 @@ extends MeshInstance3D
 		run = false;
 
 @export var unitBox: Vector3 = Vector3(.25, .25, .25)
+@export var isoLevel: float = .5
 @export var size: int = 5
 @export var material: Material
 
@@ -23,9 +24,11 @@ func _run() -> void:
 			for z in size:
 				var pos = Vector3(x - halfSize, y - halfSize, z - halfSize) * unitBox * 2.
 				var value := (noise.get_noise_3dv(pos) + 1.) / 2. + .01
-				var cube = Vector4(pos.x, pos.y, pos.z, value)
-				cubes.append(cube)
+				if value > isoLevel:
+					var cube = Vector4(pos.x, pos.y, pos.z, value)
+					cubes.append(cube)
 	
+	material.set_shader_parameter("isoLevel", isoLevel)
 	material.set_shader_parameter("unitBox", unitBox)
 	material.set_shader_parameter("cubesIn", cubes)
 	mesh.material = material

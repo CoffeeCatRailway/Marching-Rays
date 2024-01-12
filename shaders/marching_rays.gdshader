@@ -14,6 +14,9 @@ uniform bool directionalLight = false;
 uniform bool useLighting = true;
 
 uniform float smoothness : hint_range(.001, 1., .01) = 1.;
+
+// Uniforms passed in through scirpt
+uniform float isoLevel : hint_range(0., 1., .01) = .5;
 uniform vec3 unitBox = vec3(.25);
 uniform vec4 cubesIn[250];
 
@@ -50,14 +53,20 @@ float sdOctahedron(vec3 p, float s)
 float getDist(vec3 p)
 {
 	float sdf = sdSphere(p - cubesIn[0].xyz, cubesIn[0].w * unitBox.x);
-	for (int i = 1; i < cubesIn.length(); i++)
+	if (cubesIn.length() == 1)
+		return sdf;
+	else
 	{
-		if (cubesIn[i].w <= .5)
-			continue;
-		float sdfNew = sdSphere(p - cubesIn[i].xyz, cubesIn[i].w * unitBox.x);
-		sdf = smoothMin(sdf, sdfNew, smoothness);
+		float sdfNew;
+		for (int i = 1; i < cubesIn.length(); i++)
+		{
+			if (cubesIn[i].w <= isoLevel) // Values meeting this condition are removed before passing to shader
+				continue;
+			sdfNew = sdSphere(p - cubesIn[i].xyz, cubesIn[i].w * unitBox.x);
+			sdf = smoothMin(sdf, sdfNew, smoothness);
+		}
+		return sdf;
 	}
-	return sdf;
 	
 	//float unit = unitBox.x * 2.;
 	//float[] cubes = {
