@@ -4,9 +4,9 @@
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_dmh1l"]
 shader = ExtResource("1_1s0i8")
-shader_parameter/fov = 90.0
+shader_parameter/fov = 45.0
 shader_parameter/cameraPos = Vector3(0, 0, 5)
-shader_parameter/front = Vector3(0, 0, 1)
+shader_parameter/front = Vector3(0, 0, -1)
 shader_parameter/up = Vector3(0, 1, 0)
 
 [node name="Node" type="Node"]

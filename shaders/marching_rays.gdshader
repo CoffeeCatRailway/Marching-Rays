@@ -96,7 +96,7 @@ float march(vec3 ro, vec3 rd)
 		dO += dS;
 		
 		if (dS < SURF_DST || dO > MAX_DST)
-		break;
+			break;
 	}
 	return dO;
 }

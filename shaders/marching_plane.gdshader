@@ -1,10 +1,41 @@
 shader_type canvas_item;
 // https://cgmathprog.home.blog/2019/08/31/raymarching-from-scratch-part-1/
 
+const int MAX_STEPS = 250;
+const float MAX_DST = 20.;
+const float SURF_DST = .00001;
+
 uniform float fov = 45.;
 uniform vec3 cameraPos = vec3(0., 0., 5.);
 uniform vec3 front = vec3(0., 0., -1.);
 uniform vec3 up = vec3(0., 1., 0.);
+
+float sdSphere(vec3 p, vec3 c, float r)
+{
+	return length(p - c) - r;
+}
+
+float sdf(vec3 p)
+{
+	return sdSphere(p, vec3(0.), 1.);
+}
+
+vec3 rayMarch(vec3 rd)
+{
+	vec3 hitColor = vec3(1., 1., 1.);
+	vec3 missColor = vec3(0., 0., 0.);
+	
+	float depth = 0.;
+	for (int i = 0; depth < MAX_DST && i < MAX_STEPS; i++)
+	{
+		vec3 p = cameraPos + rd * depth;
+		float dst = sdf(p);
+		if (dst < SURF_DST)
+			return hitColor;
+		depth += dst;
+	}
+	return missColor;
+}
 
 vec3 getRayDirection(vec2 resolution, vec2 uv)
 {
@@ -32,7 +63,11 @@ void fragment() {
 	
 	vec3 rayDir = getRayDirection(resolution, UV);
 	// convert ray coordinates from [-1, 1] range to the [0, 1]
-	vec3 adjustedRayDir = (rayDir + 1.) / 2.;
+	
+	//vec3 adjustedRayDir = (rayDir + 1.) / 2.;
 	// show direction on screen as a color
-	COLOR = vec4(adjustedRayDir, 1.);
+	//COLOR = vec4(adjustedRayDir, 1.);
+	
+	vec3 rayMarchColor = rayMarch(rayDir);
+	COLOR = vec4(rayMarchColor, 1.);
 }
