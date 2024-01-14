@@ -1,12 +1,15 @@
-[gd_scene load_steps=3 format=3 uid="uid://clxy1pb2ek072"]
+[gd_scene load_steps=6 format=3 uid="uid://clxy1pb2ek072"]
 
 [ext_resource type="Shader" path="res://shaders/marching_plane.gdshader" id="1_1s0i8"]
+[ext_resource type="Script" path="res://scripts/CameraMovement.gd" id="2_mvkm1"]
+[ext_resource type="Script" path="res://scripts/Fov.gd" id="3_uvkvq"]
+[ext_resource type="Script" path="res://scripts/DebugInfo.gd" id="4_2mkhv"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_dmh1l"]
 shader = ExtResource("1_1s0i8")
 shader_parameter/fov = 45.0
-shader_parameter/cameraPos = Vector3(0, 0, 5)
-shader_parameter/front = Vector3(0, 0, -1)
+shader_parameter/cameraPos = Vector3(-3, 0, 0)
+shader_parameter/front = Vector3(1, 0, 0)
 shader_parameter/up = Vector3(0, 1, 0)
 shader_parameter/globalAmbient = 0.1
 shader_parameter/globalDiffuse = 1.0
@@ -36,3 +39,12 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+
+[node name="CameraMovement" type="Node" parent="Control/ColorRect"]
+script = ExtResource("2_mvkm1")
+
+[node name="Fov" type="Node" parent="Control/ColorRect"]
+script = ExtResource("3_uvkvq")
+
+[node name="DebugInfo" type="Node" parent="Control/ColorRect"]
+script = ExtResource("4_2mkhv")
