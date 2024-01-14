@@ -1,11 +1,11 @@
-[gd_scene load_steps=6 format=3 uid="uid://4b7nk1fvjtxc"]
+[gd_scene load_steps=6 format=3 uid="uid://d2jdqshov0mak"]
 
-[ext_resource type="Material" uid="uid://chodf53o2hry" path="res://marching_rays_mat.tres" id="1_p4s5e"]
-[ext_resource type="Script" path="res://MarchingRays.gd" id="2_15bqu"]
-[ext_resource type="Script" path="res://CameraController.gd" id="3_lwl8i"]
+[ext_resource type="Material" uid="uid://chodf53o2hry" path="res://shaders/marching_rays_mat.tres" id="1_5b501"]
+[ext_resource type="Script" path="res://scripts/MarchingRays.gd" id="2_tq2b6"]
+[ext_resource type="Script" path="res://scripts/CameraController.gd" id="3_jdk8u"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_8gwvp"]
-material = ExtResource("1_p4s5e")
+material = ExtResource("1_5b501")
 flip_faces = true
 size = Vector3(10, 10, 10)
 
@@ -17,13 +17,13 @@ fractal_type = 0
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 mesh = SubResource("BoxMesh_8gwvp")
-script = ExtResource("2_15bqu")
+script = ExtResource("2_tq2b6")
 size = 8
-material = ExtResource("1_p4s5e")
+material = ExtResource("1_5b501")
 noise = SubResource("FastNoiseLite_qtseh")
 
 [node name="CamHolder" type="Node3D" parent="."]
-script = ExtResource("3_lwl8i")
+script = ExtResource("3_jdk8u")
 
 [node name="Camera3D" type="Camera3D" parent="CamHolder"]
 transform = Transform3D(1, 0, 0, 0, 0.900357, 0.435153, 0, -0.435153, 0.900357, 0, 5, 7.5)
