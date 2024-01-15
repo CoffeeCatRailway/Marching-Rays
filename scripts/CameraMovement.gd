@@ -31,17 +31,19 @@ func computeDirRight(yawRads: float) -> Vector3:
 		cos(yawRads)
 	)
 
+func updateFront(mouseOffsets: Vector2) -> void:
+	# Keep pitch in (-90, 90) degrees range to prevent reversing the camera
+	mouseOffsets.y = clamp(mouseOffsets.y, -87., 87.)
+	var newDir = computeDirection(deg_to_rad(-mouseOffsets.y), deg_to_rad(mouseOffsets.x))
+	
+	# Update front vector in the shader
+	get_parent().material.set_shader_parameter("front", newDir)
+
 func _input(event) -> void:
 	if event is InputEventMouseMotion:
 		if mouseModeToggle:
 			mouseOffsets += event.relative * MOUSE_SENSIIVITY
-			# Keep pitch in (-90, 90) degrees range to prevent reversing the camera
-			mouseOffsets.y = clamp(mouseOffsets.y, -87., 87.)
-			var newDir = computeDirection(deg_to_rad(-mouseOffsets.y), deg_to_rad(mouseOffsets.x))
-			
-			# Update front vector in the shader
-			var colorRect = get_parent()
-			colorRect.material.set_shader_parameter("front", newDir)
+			updateFront(mouseOffsets)
 	if event is InputEventKey:
 		## Show/hide mouse
 		if event.is_action_released("ui_cancel"):

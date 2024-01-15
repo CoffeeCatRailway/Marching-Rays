@@ -1,13 +1,15 @@
 shader_type canvas_item;
 // https://cgmathprog.home.blog/2019/08/31/raymarching-from-scratch-part-1/
 
+#include "sdf_includes.gdshaderinc"
+
 const int MAX_STEPS = 250;
 const float MAX_DST = 20.;
 const float SURF_DST = .00001;
 const float DERIVATIVE_STEP = 0.0001;
 
 uniform float fov = 45.;
-uniform vec3 cameraPos = vec3(-3., 0., 0.);
+uniform vec3 cameraPos = vec3(0., 0., 0.);
 uniform vec3 front = vec3(1., 0., 0.);
 uniform vec3 up = vec3(0., 1., 0.);
 
@@ -17,22 +19,13 @@ uniform float specularCoeff = 1.;
 uniform float specularExponent = 64.;
 uniform vec3 lightPos = vec3(-2., 5., 3.);
 
-float sdPlane(vec3 p, vec3 n, float h)
-{
-	return dot(p, normalize(n)) + h;
-}
-
-float sdSphere(vec3 p, vec3 c, float r)
-{
-	return length(p - c) - r;
-}
-
 float sdf(vec3 p)
 {
 	return min(
-		min(
-			sdSphere(p, vec3(1., 0., 0.), 1.),
-			sdSphere(p, vec3(-1., 0., 0.), .5)
+		smoothMin(
+			sdOctahedron(p - vec3(0., sin(TIME * 1.5), 1.), 1.),
+			sdSphere(p - vec3(0., cos(TIME * 1.4) * .65, sin(TIME * 1.4) * .65 - 1.), .5),
+			1.5
 		),
 		sdPlane(p, vec3(0., 1., 0.), 2.)
 	);
@@ -56,8 +49,8 @@ vec3 blinnPhong(vec3 p, vec3 lp, vec3 ambient, vec3 diffuse)
 	
 	vec3 ambientFactor = ambient * ambientCoeff;
 	vec3 diffuseFactor = diffuse * max(0., dot(normal, toLight));
-	vec3 specularFactor = diffuse * pow(max(0., dot(normal, halfwayDir)), specularExponent) * specularCoeff;
-	return ambientFactor + diffuseFactor + specularFactor;
+	//vec3 specularFactor = diffuse * pow(max(0., dot(normal, halfwayDir)), specularExponent) * specularCoeff;
+	return ambientFactor + diffuseFactor;// + specularFactor;
 }
 
 vec3 rayMarch(vec3 rd)

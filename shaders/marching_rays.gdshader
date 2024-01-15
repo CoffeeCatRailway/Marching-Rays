@@ -1,6 +1,8 @@
 shader_type spatial;
 render_mode unshaded;
 
+#include "sdf_includes.gdshaderinc"
+
 varying vec3 worldCam;
 varying vec3 worldPos;
 
@@ -19,36 +21,6 @@ uniform float smoothness : hint_range(.001, 1., .01) = 1.;
 uniform float isoLevel : hint_range(0., 1., .01) = .5;
 uniform vec3 unitBox = vec3(.25);
 uniform vec4 cubesIn[250];
-
-float smoothMin(float da, float db, float bias)
-{
-	float h = max(bias - abs(da - db), 0.) / bias;
-	return min(da, db) - h * h * h * bias * 1. / 6.;
-}
-
-float sdBox(vec3 p, vec3 b)
-{
-	vec3 q = abs(p) - b;
-	return length(max(q, 0.)) + min(max(q.x, max(q.y, q.z)), 0.);
-}
-
-float sdSphere(vec3 p, float r)
-{
-	return length(p) - r;
-}
-
-float sdEllipsoid(vec3 p, vec3 r)
-{
-	float k0 = length(p / r);
-	float k1 = length(p / (r * r));
-	return k0 * (k0 - 1.) / k1;
-}
-
-float sdOctahedron(vec3 p, float s)
-{
-	p = abs(p);
-	return (p.x + p.y + p.z - s) * .57735027;
-}
 
 float getDist(vec3 p)
 {
