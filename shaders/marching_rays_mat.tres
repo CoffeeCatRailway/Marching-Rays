@@ -5,9 +5,15 @@
 [resource]
 render_priority = 0
 shader = ExtResource("1_01kqn")
-shader_parameter/light = Vector3(10, 5, 10)
-shader_parameter/directionalLight = false
+shader_parameter/ambientCoeff = 0.1
+shader_parameter/diffuseCoeff = 1.0
+shader_parameter/specularCoeff = 1.0
+shader_parameter/shininess = 64.0
+shader_parameter/specularHighlights = true
+shader_parameter/lightPos = Vector3(-2, 5, 3)
 shader_parameter/useLighting = true
+shader_parameter/ambientColor = Color(1, 1, 1, 1)
+shader_parameter/missColor = Color(0, 0, 0, 1)
 shader_parameter/smoothness = 1.0
 shader_parameter/isoLevel = 0.5
 shader_parameter/unitBox = Vector3(0.25, 0.25, 0.25)
