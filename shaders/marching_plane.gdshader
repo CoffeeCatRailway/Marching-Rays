@@ -14,6 +14,7 @@ uniform vec3 front = vec3(1., 0., 0.);
 uniform vec3 up = vec3(0., 1., 0.);
 
 uniform bool showNormals = false;
+uniform bool showDepth = false;
 uniform vec3 ambientColor : source_color = vec3(.1, 0., 0.);
 uniform vec3 hitColor : source_color = vec3(.5, 0., 0.);
 uniform vec3 missColor : source_color = vec3(0., 0., 0.);
@@ -42,8 +43,8 @@ float sdf(vec3 p)
 	float c1_75 = cos(TIME * 1.75);
 	float rad45 = radians(90. * c1_5);
 	
-	float octahedron = sdOctahedron(twistY(p - vec3(0., 0., 1. + s1_5), c1_75 * 2.), 1.);
-	vec3 sdfp = p - vec3(0., 0., -1. - s1_5);
+	float octahedron = sdOctahedron(twistY(p - vec3(0., -0.75, 1. + s1_5), c1_75 * 2.), 1.);
+	vec3 sdfp = p - vec3(0., -0.75, -1. - s1_5);
 	//sdfp = rotateY(rotateX(sdfp, rad45), rad45);
 	float box = sdBox(sdfp, vec3(.5));
 	float sphere = sdEllipsoid(sdfp, vec3(.5, .75, .5));
@@ -55,6 +56,11 @@ float sdf(vec3 p)
 	//float box1 = sdBox(bendCheap(p + vec3(0., 1.5, 0.), rad45), vec3(.5, .25, 2.));
 	//op = opUnion(op, box1);
 	
+	op = opUnion(op, sdBox(p - vec3(4., .5, -4.5), vec3(1.)));
+	op = opUnion(op, sdSphere(p - vec3(4., .5, -1.5), 1.));
+	op = opUnion(op, sdEllipsoid(p - vec3(4., .5, 1.5), vec3(1., 2., 1.)));
+	op = opUnion(op, sdOctahedron(p - vec3(4., .5, 4.5), 1.));
+	op = opUnion(op, sdSphere(p - lightPos, .1));
 	return opUnion(op, sdPlane(p, vec3(0., 1., 0.), 2.));
 }
 
@@ -129,13 +135,14 @@ vec3 rayMarch(vec3 rd)
 		{
 			if (showNormals)
 				return estimateNormal(p);
+			else if (showDepth)
+				return vec3(depth / MAX_DST);
 			else
 				return blinnPhong(p, lightPos, ambientColor, hitColor);
 		}
 	}
 	
-	return missColor;
-	//return vec3(depth / MAX_DST);
+	return showDepth ? vec3(depth / MAX_DST) : missColor;
 }
 
 vec3 getRayDirection(vec2 resolution, vec2 uv)

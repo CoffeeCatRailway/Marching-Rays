@@ -12,6 +12,7 @@ shader_parameter/cameraPos = Vector3(-5, 0, 0)
 shader_parameter/front = Vector3(1, 0, 0)
 shader_parameter/up = Vector3(0, 1, 0)
 shader_parameter/showNormals = false
+shader_parameter/showDepth = false
 shader_parameter/ambientColor = Color(0.1, 0, 0, 1)
 shader_parameter/hitColor = Color(0.5, 0, 0, 1)
 shader_parameter/missColor = Color(0, 0, 0, 1)
