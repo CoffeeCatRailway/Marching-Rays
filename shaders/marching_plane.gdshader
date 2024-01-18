@@ -5,25 +5,35 @@ shader_type canvas_item;
 
 const int MAX_STEPS = 250;
 const float MAX_DST = 20.;
-const float SURF_DST = .00001;
-const float DERIVATIVE_STEP = 0.0001;
-
-uniform bool specularHighlights = false;
-uniform bool showNormals = false;
+const float SURF_DST = 1e-3;
+const float DERIVATIVE_STEP = 1e-3;
 
 uniform float fov = 45.;
 uniform vec3 cameraPos = vec3(0., 0., 0.);
 uniform vec3 front = vec3(1., 0., 0.);
 uniform vec3 up = vec3(0., 1., 0.);
 
+uniform bool showNormals = false;
+uniform vec3 ambientColor : source_color = vec3(.1, 0., 0.);
+uniform vec3 hitColor : source_color = vec3(.5, 0., 0.);
+uniform vec3 missColor : source_color = vec3(0., 0., 0.);
+
+// Lighting
+uniform int lightingModel = 2;
+uniform vec3 lightPos = vec3(-2., 5., 3.);
+uniform bool specularHighlights = true;
+uniform float shininess = 16.;
+uniform float gamma = 2.2;
+
+// Lighting model 1
 uniform float ambientCoeff = .1;
 uniform float diffuseCoeff = 1.;
 uniform float specularCoeff = 1.;
-uniform float specularExponent = 64.;
-uniform vec3 lightPos = vec3(-2., 5., 3.);
 
-uniform vec3 ambientColor : source_color = vec3(1., 1., 1.);
-uniform vec3 missColor : source_color = vec3(0., 0., 0.);
+// Lighting model 2
+uniform vec3 lightColor : source_color = vec3(1., 1., 1.);
+uniform float lightPower = 40.;
+uniform vec3 specColor : source_color = vec3(1., 1., 1.);
 
 float sdf(vec3 p)
 {
@@ -57,27 +67,55 @@ vec3 estimateNormal(vec3 p)
 	));
 }
 
-vec3 blinnPhong(vec3 p, vec3 lp, vec3 ambient, vec3 diffuse)
+vec3 blinnPhong(vec3 p, vec3 _lightPos, vec3 ambient, vec3 diffuse)
 {
 	vec3 normal = estimateNormal(p);
-	vec3 toEye = normalize(cameraPos - p);
-	vec3 toLight = normalize(lp - p);
-	vec3 halfwayDir = normalize(toLight + toEye);
-	
-	vec3 ambientFactor = ambient * ambientCoeff;
-	vec3 diffuseFactor = diffuse * max(0., dot(normal, toLight)) * diffuseCoeff;
-	vec3 specularFactor = diffuse * pow(max(0., dot(normal, halfwayDir)), specularExponent) * specularCoeff;
-	
-	vec3 res = ambientFactor + diffuseFactor;
-	if (specularHighlights)
-		res += specularFactor;
+	vec3 res;
+	if (lightingModel == 1)
+	{
+		vec3 toEye = normalize(cameraPos - p);
+		vec3 toLight = normalize(_lightPos - p);
+		vec3 halfwayDir = normalize(toLight + toEye);
+		
+		vec3 ambientFactor = ambient * ambientCoeff;
+		vec3 diffuseFactor = diffuse * max(0., dot(normal, toLight)) * diffuseCoeff;
+		vec3 specularFactor = diffuse * pow(max(0., dot(normal, halfwayDir)), shininess) * specularCoeff;
+		
+		res = ambientFactor + diffuseFactor;
+		if (specularHighlights)
+			res += specularFactor;
+	} else
+	{
+		vec3 lightDir = _lightPos - p;
+		float dist = length(lightDir);
+		dist *= dist;
+		lightDir = normalize(lightDir);
+		
+		float lamertain = max(dot(lightDir, normal), 0.); // diffuse factor
+		float specular = 0.;
+		
+		if (lamertain > 0.)
+		{
+			vec3 viewDir = normalize(-p);
+			// blinn phong
+			vec3 halfDir = normalize(lightDir + viewDir);
+			float specAngle = max(dot(halfDir, normal), 0.);
+			specular = pow(specAngle, shininess);
+		}
+		
+		vec3 l = lightColor * lightPower / dist;
+		res = ambient + diffuse * lamertain * l;
+		if (specularHighlights)
+			res += specColor * specular * l;
+	}
+	res = pow(res, vec3(1. / gamma));
 	return res;
 }
 
 vec3 rayMarch(vec3 rd)
 {
 	//vec3 ambientColor = vec3(1., 1., 1.);
-	vec3 hitColor = vec3(1., 1., 1.);
+	//vec3 hitColor = vec3(.5, 0., 0.);
 	//vec3 missColor = vec3(0., 0., 0.);
 	
 	float depth = 0.;
