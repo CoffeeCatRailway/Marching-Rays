@@ -35,7 +35,7 @@ float getDist(vec3 p)
 			if (cubesIn[i].w <= isoLevel) // Values meeting this condition are removed before passing to shader
 				continue;
 			sdfNew = sdSphere(p - cubesIn[i].xyz, cubesIn[i].w * unitBox.x);
-			sdf = smoothMin(sdf, sdfNew, smoothness);
+			sdf = opSmoothUnion(sdf, sdfNew, smoothness);
 		}
 		return sdf;
 	}

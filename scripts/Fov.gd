@@ -1,6 +1,6 @@
 extends Node
 
-@export var WHEEL_STEP := 4.
+@export var WHEEL_STEP := 5.
 @onready var fov: float = get_parent().material.get_shader_parameter("fov")
 
 func updateFov(nfov: float) -> void:
