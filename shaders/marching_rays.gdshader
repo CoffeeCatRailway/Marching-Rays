@@ -20,13 +20,13 @@ uniform float smoothness : hint_range(.001, 1., .01) = 1.;
 // Uniforms passed in through scirpt
 uniform float isoLevel : hint_range(0., 1., .01) = .5;
 uniform vec3 unitBox = vec3(.25);
-uniform vec4 cubesIn[250];
+uniform vec4 cubesIn[512];
 
-float getDist(vec3 p)
+float sdf(vec3 p)
 {
-	float sdf = sdSphere(p - cubesIn[0].xyz, cubesIn[0].w * unitBox.x);
+	float o = sdSphere(p - cubesIn[0].xyz, cubesIn[0].w * unitBox.x);
 	if (cubesIn.length() == 1)
-		return sdf;
+		return o;
 	else
 	{
 		float sdfNew;
@@ -35,9 +35,9 @@ float getDist(vec3 p)
 			if (cubesIn[i].w <= isoLevel) // Values meeting this condition are removed before passing to shader
 				continue;
 			sdfNew = sdSphere(p - cubesIn[i].xyz, cubesIn[i].w * unitBox.x);
-			sdf = opSmoothUnion(sdf, sdfNew, smoothness);
+			o = opSmoothUnion(o, sdfNew, smoothness);
 		}
-		return sdf;
+		return o;
 	}
 	
 	//float unit = unitBox.x * 2.;
@@ -56,37 +56,15 @@ float getDist(vec3 p)
 	//return o;
 }
 
-float march(vec3 ro, vec3 rd)
+vec3 estimateNormal(vec3 p)
 {
-	float dO = 0.;
-	float dS;
-	
-	for (int i = 0; i < MAX_STEPS; i++)
-	{
-		vec3 p = ro + dO * rd;
-		dS = getDist(p);
-		dO += dS;
-		
-		if (dS < SURF_DST || dO > MAX_DST)
-			break;
-	}
-	return dO;
-}
-
-vec3 getNormal(vec3 p)
-{
-	vec2 e = vec2(1e-2, 0.);
-	vec3 n = getDist(p) - vec3(
-		getDist(p - e.xyy),
-		getDist(p - e.yxy),
-		getDist(p - e.yyx)
+	vec2 e = vec2(SURF_DST, 0.);
+	vec3 n = sdf(p) - vec3(
+		sdf(p - e.xyy),
+		sdf(p - e.yxy),
+		sdf(p - e.yyx)
 	);
 	return normalize(n);
-}
-
-float saturate(float x)
-{
-	return max(0., min(1., x));
 }
 
 float calculateShadow(in vec3 ro, vec3 rd, float dstToLight)
@@ -106,6 +84,71 @@ float calculateShadow(in vec3 ro, vec3 rd, float dstToLight)
 	return shadowIntensity + (1. - shadowIntensity) * brightness;
 }
 
+// Shadow - Based on: https://github.com/SebLague/Ray-Marching/blob/master/Assets/Scripts/SDF/Raymarching.compute
+vec3 calculateLightingLague(vec3 p, vec3 ro, vec3 baseColor)
+{
+	vec3 normal = estimateNormal(p);
+	vec3 lightDir = normalize(light + ro);
+	float lighting = (dot(normal, lightDir) + 1.) / 2.;
+	
+	//vec3 offset = p + normal * SHADOW_BIAS;
+	//vec3 toLight = normalize(light - offset);
+	
+	//float dstToLight = distance(offset, light);
+	//float shadow = calculateShadow(offset, toLight, dstToLight);
+	return baseColor * lighting;// * shadow;
+}
+
+vec3 blinnPhong(vec3 p, vec3 ro, vec3 lp, vec3 ambient, vec3 diffuse)
+{
+	const float ambientCoeff = .1;
+	const float diffuseCoeff = 1.;
+	const float specularCoeff = 1.;
+	const float specularExponent = 64.;
+	const bool specularHighlights = false;
+	
+	vec3 normal = estimateNormal(p);
+	vec3 toEye = normalize(ro - p);
+	vec3 toLight = normalize(lp - p);
+	vec3 halfwayDir = normalize(toLight + toEye);
+	
+	vec3 ambientFactor = ambient * ambientCoeff;
+	vec3 diffuseFactor = diffuse * max(0., dot(normal, toLight)) * diffuseCoeff;
+	vec3 specularFactor = diffuse * pow(max(0., dot(normal, halfwayDir)), specularExponent) * specularCoeff;
+	
+	vec3 res = ambientFactor + diffuseFactor;
+	if (specularHighlights)
+		res += specularFactor;
+	return res;
+}
+
+vec4 rayMarch(vec3 ro, vec3 rd)
+{
+	vec3 hitColor = vec3(1.);
+	vec3 missColor = vec3(0.);
+	
+	float depth = 0.;
+	for (int i = 0; depth < MAX_DST && i < MAX_STEPS; i++)
+	{
+		vec3 p = ro + rd * depth;
+		float dst = sdf(p);
+		depth += dst;
+		
+		if (abs(dst) <= SURF_DST)
+		{
+			if (useLighting)
+			{
+				return vec4(calculateLightingLague(p, ro, estimateNormal(p)), 1.);
+				//return vec4(blinnPhong(p, ro, light, vec3(1.), estimateNormal(p)), 1.);
+			} else
+				return vec4(hitColor, 1.);
+			//return vec4(hitColor, depth / MAX_DST);
+		}
+	}
+	return vec4(missColor, 0.);
+	//return vec4(missColor, depth / MAX_DST);
+}
+
 void vertex()
 {
 	worldCam = (inverse(MODELVIEW_MATRIX) * vec4(0., 0., 0., 1.)).xyz;
@@ -116,31 +159,9 @@ void fragment()
 {
 	vec3 ro = worldCam;
 	vec3 rd = normalize(worldPos - ro);
-	vec3 col = vec3(1.);
 	
-	float d = march(ro, rd);
-	if (d >= MAX_DST)
-		discard;
-	else
-	{
-		vec3 pointOnSurface = ro + rd * d;
-		vec3 normal = getNormal(pointOnSurface);
-		col = normal;
-		
-		if (useLighting)
-		{
-			vec3 lightDir = !directionalLight ? normalize(light + ro) : -light;
-			float lighting = saturate(dot(normal, lightDir));
-			
-			// Shadow - Based on: https://github.com/SebLague/Ray-Marching/blob/master/Assets/Scripts/SDF/Raymarching.compute
-			vec3 offsetPos = pointOnSurface + normal * SHADOW_BIAS;
-			vec3 dirToLight = !directionalLight ? normalize(light - offsetPos) : -light;
-			
-			float dstToLight = !directionalLight ? distance(offsetPos, light) : MAX_DST;
-			float shadow = calculateShadow(offsetPos, dirToLight, dstToLight);
-			
-			col *= lighting * shadow;
-		}
-	}
-	ALBEDO = col;
+	vec4 marchColor = rayMarch(ro, rd);
+	ALBEDO = marchColor.xyz;
+	ALPHA = marchColor.w;
+	//DEPTH = marchColor.w;
 }
